@@ -81,14 +81,14 @@ export const config = {
         },
         {
             id: 4,
-            title: "Spotify Clone",
-            subtitle: "Music Streaming Platform",
-            category: "Frontend",
-            technologies: "HTML, CSS, JavaScript, Tailwind CSS, Audio API",
+            title: "Pegion-Mail",
+            subtitle: "Real-Time Chat Platform",
+            category: "Full Stack",
+            technologies: "React, Node.js, Socket.io, MongoDB, JWT, Tailwind CSS",
             image: "/images/project-4.webp",
-            deploymentLink: "https://spotify-git-main-arijit-bits-projects.vercel.app",
-            description: "Spotify-inspired music streaming interface with playlists, song cards, responsive layouts, and custom audio playback controls.",
-            highlights: "Optimized UI responsiveness by 25%."
+            deploymentLink: "https://pegion-mail.vercel.app/",
+            description: "Real-time chat app built with React, Node.js, and Socket.io, featuring instant messaging, group chats, live status indicators, and secure JWT-based authentication.",
+            highlights: "Scalable MongoDB backend deployed on Vercel and Render with a premium mobile-first UI, dynamic themes, and responsive layouts."
         }
     ],
     contact: {

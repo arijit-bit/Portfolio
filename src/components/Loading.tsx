@@ -16,7 +16,7 @@ const Loading = ({ percent }: { percent: number }) => {
 
     const loadedTimeout = setTimeout(() => {
       setLoaded(true);
-    }, 600);
+    }, 150);
 
     return () => {
       clearTimeout(loadedTimeout);
@@ -28,7 +28,7 @@ const Loading = ({ percent }: { percent: number }) => {
 
     const isLoadedTimeout = setTimeout(() => {
       setIsLoaded(true);
-    }, 1000);
+    }, 250);
 
     return () => {
       clearTimeout(isLoadedTimeout);
@@ -50,7 +50,7 @@ const Loading = ({ percent }: { percent: number }) => {
       if (!isCancelled) {
         setIsLoading(false);
       }
-    }, 900);
+    }, 450);
 
     import("./utils/initialFX")
       .then((module) => {
