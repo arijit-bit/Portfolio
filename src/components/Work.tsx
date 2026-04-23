@@ -1,5 +1,5 @@
 import "./styles/Work.css";
-import WorkImage from "./WorkImage";
+// import removed
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect } from "react";
@@ -77,25 +77,30 @@ const Work = () => {
                   </>
                 )}
                 <div className="work-actions">
+                  {project.deploymentLink && (
+                    <a
+                      href={project.deploymentLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-cursor="disable"
+                      className="btn-primary"
+                    >
+                      Live Demo
+                    </a>
+                  )}
                   {project.sourceLink && (
                     <a
                       href={project.sourceLink}
                       target="_blank"
                       rel="noreferrer"
                       data-cursor="disable"
+                      className="btn-secondary"
                     >
-                      GitHub
+                      GitHub Repo
                     </a>
                   )}
                 </div>
               </div>
-              <WorkImage
-                alt={project.title}
-                title={project.title}
-                category={project.category}
-                technologies={project.technologies}
-                link={project.deploymentLink || project.sourceLink}
-              />
             </div>
           ))}
         </div>
