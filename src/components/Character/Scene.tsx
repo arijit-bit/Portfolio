@@ -155,6 +155,38 @@ const Scene = () => {
           THREE.MathUtils.lerp
         );
         light.setPointLight(screenLight);
+      } else if (characterRef.current) {
+        const headUniforms = (characterRef.current as any).userData?.headUniforms;
+        if (headUniforms) {
+          if (window.scrollY < 200) {
+            // Natural cursor tracking (Iron Man looks directly at cursor)
+            const targetYaw = -mouse.x * 0.40;
+            const targetPitch = mouse.y * 0.20;
+
+            headUniforms.uHeadRotation.value.x = THREE.MathUtils.lerp(
+              headUniforms.uHeadRotation.value.x,
+              targetYaw,
+              0.08
+            );
+            headUniforms.uHeadRotation.value.y = THREE.MathUtils.lerp(
+              headUniforms.uHeadRotation.value.y,
+              targetPitch,
+              0.08
+            );
+          } else {
+            // When scrolled down, return head smoothly to forward center
+            headUniforms.uHeadRotation.value.x = THREE.MathUtils.lerp(
+              headUniforms.uHeadRotation.value.x,
+              0,
+              0.06
+            );
+            headUniforms.uHeadRotation.value.y = THREE.MathUtils.lerp(
+              headUniforms.uHeadRotation.value.y,
+              0,
+              0.06
+            );
+          }
+        }
       }
 
       const delta = clock.getDelta();

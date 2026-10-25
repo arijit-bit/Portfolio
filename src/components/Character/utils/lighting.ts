@@ -18,6 +18,11 @@ const setLighting = (scene: THREE.Scene) => {
   pointLight.castShadow = true;
   scene.add(pointLight);
 
+  // Stark Arc Reactor / Repulsor subtle ambient light at chest level
+  const arcLight = new THREE.PointLight(0x00f0ff, 0, 20, 2);
+  arcLight.position.set(0, 10.5, 1.2);
+  scene.add(arcLight);
+
   new RGBELoader()
     .setPath("/models/")
     .load("char_enviorment.hdr", function (texture) {
@@ -28,22 +33,33 @@ const setLighting = (scene: THREE.Scene) => {
     });
 
   function setPointLight(screenLight: any) {
-    if (screenLight.material.opacity > 0.9) {
+    if (screenLight && screenLight.material && screenLight.material.opacity > 0.9) {
       pointLight.intensity = screenLight.material.emissiveIntensity * 20;
     } else {
-      pointLight.intensity = 0;
+      pointLight.intensity = 15;
     }
   }
+
   const duration = 2;
   const ease = "power2.inOut";
   function turnOnLights() {
     gsap.to(scene, {
-      environmentIntensity: 0.64,
+      environmentIntensity: 1.0,
       duration: duration,
       ease: ease,
     });
     gsap.to(directionalLight, {
-      intensity: 1,
+      intensity: 1.5,
+      duration: duration,
+      ease: ease,
+    });
+    gsap.to(pointLight, {
+      intensity: 15,
+      duration: duration,
+      ease: ease,
+    });
+    gsap.to(arcLight, {
+      intensity: 5,
       duration: duration,
       ease: ease,
     });
