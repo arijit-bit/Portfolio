@@ -7,7 +7,6 @@ import handleResize from "./utils/resizeUtils";
 import {
   handleMouseMove,
   handleTouchEnd,
-  handleHeadRotation,
   handleTouchMove,
 } from "./utils/mouseUtils";
 import setAnimations from "./utils/animationUtils";
@@ -47,7 +46,6 @@ const Scene = () => {
     camera.zoom = 1.1;
     camera.updateProjectionMatrix();
 
-    let headBone: THREE.Object3D | null = null;
     let screenLight: THREE.Object3D | null = null;
     let mixer: THREE.AnimationMixer | undefined;
     let isVisible = true;
@@ -76,7 +74,6 @@ const Scene = () => {
       const nextCharacter = gltf.scene;
       characterRef.current = nextCharacter;
       scene.add(nextCharacter);
-      headBone = nextCharacter.getObjectByName("spine006") || null;
       screenLight = nextCharacter.getObjectByName("screenlight") || null;
 
       progress.loaded().then(() => {
@@ -90,7 +87,6 @@ const Scene = () => {
     });
 
     let mouse = { x: 0, y: 0 };
-    let interpolation = { x: 0.1, y: 0.2 };
     let debounce: number | undefined;
     let touchMoveTarget: HTMLElement | null = null;
     let touchMoveHandler: ((event: TouchEvent) => void) | null = null;
@@ -114,9 +110,8 @@ const Scene = () => {
     };
 
     const onTouchEnd = () => {
-      handleTouchEnd((x, y, interpolationX, interpolationY) => {
+      handleTouchEnd((x, y) => {
         mouse = { x, y };
-        interpolation = { x: interpolationX, y: interpolationY };
       });
     };
 
@@ -124,6 +119,7 @@ const Scene = () => {
       isPageVisible = document.visibilityState === "visible";
     };
 
+    window.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("visibilitychange", onVisibilityChange);
 
@@ -145,49 +141,40 @@ const Scene = () => {
       frameId = requestAnimationFrame(animate);
       if (!isVisible || !isPageVisible) return;
 
-      if (headBone) {
-        handleHeadRotation(
-          headBone,
-          mouse.x,
-          mouse.y,
-          interpolation.x,
-          interpolation.y,
-          THREE.MathUtils.lerp
-        );
-        light.setPointLight(screenLight);
-      } else if (characterRef.current) {
-        const headUniforms = (characterRef.current as any).userData?.headUniforms;
-        if (headUniforms) {
-          if (window.scrollY < 200) {
-            // Natural cursor tracking (Iron Man looks directly at cursor)
-            const targetYaw = -mouse.x * 0.40;
-            const targetPitch = mouse.y * 0.20;
+      const pose = (characterRef.current as any)?.userData?.pose;
+      if (pose) {
+        if (window.scrollY < 200) {
+          // Natural cursor tracking in hero section
+          const targetYaw = mouse.x * 12;
+          const targetPitch = -mouse.y * 7;
 
-            headUniforms.uHeadRotation.value.x = THREE.MathUtils.lerp(
-              headUniforms.uHeadRotation.value.x,
-              targetYaw,
-              0.08
-            );
-            headUniforms.uHeadRotation.value.y = THREE.MathUtils.lerp(
-              headUniforms.uHeadRotation.value.y,
-              targetPitch,
-              0.08
-            );
-          } else {
-            // When scrolled down, return head smoothly to forward center
-            headUniforms.uHeadRotation.value.x = THREE.MathUtils.lerp(
-              headUniforms.uHeadRotation.value.x,
-              0,
-              0.06
-            );
-            headUniforms.uHeadRotation.value.y = THREE.MathUtils.lerp(
-              headUniforms.uHeadRotation.value.y,
-              0,
-              0.06
-            );
-          }
+          pose.mouseHead.yaw = THREE.MathUtils.lerp(
+            pose.mouseHead.yaw,
+            targetYaw,
+            0.08
+          );
+          pose.mouseHead.pitch = THREE.MathUtils.lerp(
+            pose.mouseHead.pitch,
+            targetPitch,
+            0.08
+          );
+          pose.apply();
+        } else if (window.scrollY < 600) {
+          // Return smoothly to forward center when scrolling past hero
+          pose.mouseHead.yaw = THREE.MathUtils.lerp(
+            pose.mouseHead.yaw,
+            0,
+            0.06
+          );
+          pose.mouseHead.pitch = THREE.MathUtils.lerp(
+            pose.mouseHead.pitch,
+            0,
+            0.06
+          );
+          pose.apply();
         }
       }
+      light.setPointLight(screenLight);
 
       const delta = clock.getDelta();
       if (mixer) {
@@ -203,6 +190,7 @@ const Scene = () => {
       cancelAnimationFrame(frameId);
       clearTimeout(debounce);
       observer.disconnect();
+      window.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("resize", onResize);

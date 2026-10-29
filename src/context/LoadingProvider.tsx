@@ -1,7 +1,9 @@
 import {
   createContext,
   PropsWithChildren,
+  useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 import Loading from "../components/Loading";
@@ -18,13 +20,18 @@ export const LoadingProvider = ({ children }: PropsWithChildren) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loading, setLoading] = useState(0);
 
-  const value = {
-    isLoading,
-    setIsLoading,
-    setLoading: (percent: number) => {
-      setLoading((current) => Math.max(current, Math.min(percent, 100)));
-    },
-  };
+  const handleSetLoading = useCallback((percent: number) => {
+    setLoading((current) => Math.max(current, Math.min(percent, 100)));
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      isLoading,
+      setIsLoading,
+      setLoading: handleSetLoading,
+    }),
+    [isLoading, handleSetLoading]
+  );
 
   return (
     <LoadingContext.Provider value={value as LoadingType}>

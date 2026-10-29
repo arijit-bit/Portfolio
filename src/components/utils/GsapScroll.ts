@@ -1,5 +1,33 @@
 import * as THREE from "three";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+export const setPoseTimeline = (character: THREE.Object3D) => {
+  const pose = character.userData.pose;
+  if (!pose) return;
+
+  if (window.innerWidth > 1024) {
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: ".about-section",
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      })
+      .to(pose.state, {
+        progress: 1,
+        ease: "power2.inOut",
+        duration: 4,
+        delay: 2,
+        onUpdate: pose.apply,
+      });
+  }
+};
 
 export function setCharTimeline(
   character: THREE.Object3D<THREE.Object3DEventMap> | null,
@@ -21,7 +49,7 @@ export function setCharTimeline(
   const tl2 = gsap.timeline({
     scrollTrigger: {
       trigger: ".about-section",
-      start: "center 55%",
+      start: "top top",
       end: "bottom top",
       scrub: true,
       invalidateOnRefresh: true,
@@ -74,18 +102,18 @@ export function setCharTimeline(
       tl2
         .to(
           camera.position,
-          { z: 75, y: 8.4, duration: 6, delay: 2, ease: "power3.inOut" },
+          { z: 46, y: 8.5, duration: 6, delay: 1.5, ease: "power1.inOut" },
           0
         )
-        .to(".about-section", { y: "30%", duration: 6 }, 0)
-        .to(".about-section", { opacity: 0, delay: 3, duration: 2 }, 0)
+        .to(".about-me", { y: "25%", duration: 5, delay: 1.5, ease: "power1.inOut" }, 0)
+        .to(".about-me", { opacity: 0, delay: 2.5, duration: 2.5, ease: "power1.inOut" }, 0)
         .fromTo(
           ".character-model",
-          { pointerEvents: "inherit" },
-          { pointerEvents: "none", x: "-12%", delay: 2, duration: 5 },
+          { x: "-25%", pointerEvents: "inherit" },
+          { pointerEvents: "none", x: "-12%", delay: 1.5, duration: 5, ease: "power1.inOut", immediateRender: false },
           0
         )
-        .to(character.rotation, { y: 0.92, x: 0.12, delay: 3, duration: 3 }, 0);
+        .to(character.rotation, { y: -0.25, x: 0.08, delay: 2, duration: 4, ease: "power1.inOut" }, 0);
 
       if (neckBone) {
         tl2.to(neckBone.rotation, { x: 0.6, delay: 2, duration: 3 }, 0);
@@ -109,13 +137,13 @@ export function setCharTimeline(
         .fromTo(
           ".what-box-in",
           { display: "none" },
-          { display: "flex", duration: 0.1, delay: 6 },
+          { display: "flex", duration: 0.1, delay: 6.5 },
           0
         )
         .fromTo(
           ".character-rim",
           { opacity: 1, scaleX: 1.4 },
-          { opacity: 0, scale: 0, y: "-70%", duration: 5, delay: 2 },
+          { opacity: 0, scale: 0, y: "-70%", duration: 5, delay: 1.5 },
           0.3
         );
 
@@ -123,10 +151,10 @@ export function setCharTimeline(
         .fromTo(
           ".character-model",
           { y: "0%" },
-          { y: "-100%", duration: 4, ease: "none", delay: 1 },
+          { y: "-100%", duration: 4, ease: "none", delay: 1, immediateRender: false },
           0
         )
-        .fromTo(".whatIDO", { y: 0 }, { y: "15%", duration: 2 }, 0)
+        .fromTo(".what-box", { y: 0 }, { y: "15%", duration: 2 }, 0)
         .to(character.rotation, { x: -0.04, duration: 2, delay: 1 }, 0);
     }
   } else {

@@ -23,12 +23,13 @@ const Navbar = () => {
 
     lenis.stop();
 
-    let rafId = 0;
-    function raf(time: number) {
-      lenis?.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const updateLenis = (time: number) => {
+      lenis?.raf(time * 1000);
+    };
+    gsap.ticker.add(updateLenis);
+    gsap.ticker.lagSmoothing(0);
 
     const handleResize = () => {
       lenis?.resize();
@@ -59,7 +60,7 @@ const Navbar = () => {
     window.addEventListener("resize", handleResize);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      gsap.ticker.remove(updateLenis);
       window.removeEventListener("resize", handleResize);
       links.forEach((elem) => {
         elem.removeEventListener("click", handleLinkClick);
