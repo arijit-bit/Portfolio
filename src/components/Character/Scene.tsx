@@ -84,6 +84,9 @@ const Scene = () => {
       });
 
       window.addEventListener("resize", onResize);
+    }).catch((err) => {
+      console.error("Failed to load character:", err);
+      progress.loaded();
     });
 
     let mouse = { x: 0, y: 0 };
