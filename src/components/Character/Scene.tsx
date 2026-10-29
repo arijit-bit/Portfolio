@@ -173,7 +173,7 @@ const Scene = () => {
               targetPitch,
               0.08
             );
-          } else {
+          } else if (window.scrollY < 600) {
             // When scrolled down, return head smoothly to forward center
             headUniforms.uHeadRotation.value.x = THREE.MathUtils.lerp(
               headUniforms.uHeadRotation.value.x,

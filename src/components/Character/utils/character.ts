@@ -1,16 +1,19 @@
 import * as THREE from "three";
 import { DRACOLoader, GLTF, GLTFLoader } from "three-stdlib";
-import { setCharTimeline, setAllTimeline } from "../../utils/GsapScroll";
+import { setCharTimeline, setAllTimeline, setPoseTimeline } from "../../utils/GsapScroll";
+import { createArmRig, buildArmPartIds } from "./armRig";
 
 const setCharacter = (
   renderer: THREE.WebGLRenderer,
-  scene: THREE.Scene,
+  _scene: THREE.Scene,
   camera: THREE.PerspectiveCamera
 ) => {
   const loader = new GLTFLoader();
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath("/draco/");
   loader.setDRACOLoader(dracoLoader);
+
+  const armRig = createArmRig();
 
   // Pivot at the base of the skull / helmet (Z = 2060, Y = -15)
   const headUniforms = {
@@ -37,6 +40,7 @@ const setCharacter = (
             character.position.z = 0;
             character.userData.baseY = character.position.y;
             character.userData.headUniforms = headUniforms;
+            character.userData.armRig = armRig;
 
             character.traverse((child: any) => {
               if (child.isMesh) {
@@ -120,8 +124,13 @@ const setCharacter = (
                     const root = find(i);
                     const b = compBounds.get(root)!;
 
+                    // Exclude neck, collar, and nape components (rear/side neck flaps)
+                    // so they remain 100% stationary and never tear or poke out during head rotation:
+                    const isNeckOrNape = b.maxY > 40 && b.maxZ < 2160;
+
                     // 1. Upper Helmet (skull dome, forehead, eyes, ears, upper faceplate):
                     const isUpperHelmet =
+                      !isNeckOrNape &&
                       b.minZ >= 2045 &&
                       b.maxX <= 105 &&
                       b.minX >= -105 &&
@@ -149,6 +158,10 @@ const setCharacter = (
                   "headWeight",
                   new THREE.BufferAttribute(weights, 1)
                 );
+                mesh.geometry.setAttribute(
+                  "armPart",
+                  new THREE.BufferAttribute(buildArmPartIds(mesh.geometry), 1)
+                );
 
                 if (mesh.material) {
                   const mat = (mesh.material as THREE.MeshStandardMaterial).clone();
@@ -158,15 +171,21 @@ const setCharacter = (
                     mat.emissiveIntensity = 2.5;
                   }
 
-                  mat.customProgramCacheKey = () => "ironman_head_vertex_v6";
+                  mat.customProgramCacheKey = () => "ironman_head_arms_v8";
                   mat.onBeforeCompile = (shader: any) => {
                     shader.uniforms.uHeadRotation = headUniforms.uHeadRotation;
                     shader.uniforms.uNeckPivot = headUniforms.uNeckPivot;
+                    Object.assign(shader.uniforms, armRig.uniforms);
 
                     shader.vertexShader = `
                       attribute float headWeight;
+                      attribute float armPart;
                       uniform vec2 uHeadRotation;
                       uniform vec3 uNeckPivot;
+                      uniform mat3 uShoulderRot[2];
+                      uniform mat3 uElbowRot[2];
+                      uniform vec3 uShoulderPivot[2];
+                      uniform vec3 uElbowPivot[2];
 
                       mat3 rotateZ(float angle) {
                         float c = cos(angle);
@@ -201,6 +220,14 @@ const setCharacter = (
                         mat3 headRot = rotZ * rotX;
                         transformed = headRot * p + uNeckPivot;
                       }
+
+                      if (armPart > 0.5) {
+                        int side = armPart < 2.5 ? 0 : 1;
+                        bool fore = (armPart > 1.5 && armPart < 2.5) || (armPart > 3.5);
+                        vec3 q = transformed;
+                        if (fore) q = uElbowRot[side] * (q - uElbowPivot[side]) + uElbowPivot[side];
+                        transformed = uShoulderRot[side] * (q - uShoulderPivot[side]) + uShoulderPivot[side];
+                      }
                       `
                     );
 
@@ -215,6 +242,14 @@ const setCharacter = (
                         mat3 headRotNorm = rotZNorm * rotXNorm;
                         objectNormal = headRotNorm * objectNormal;
                       }
+
+                      if (armPart > 0.5) {
+                        int side = armPart < 2.5 ? 0 : 1;
+                        bool fore = (armPart > 1.5 && armPart < 2.5) || (armPart > 3.5);
+                        vec3 nn = objectNormal;
+                        if (fore) nn = uElbowRot[side] * nn;
+                        objectNormal = uShoulderRot[side] * nn;
+                      }
                       `
                     );
                   };
@@ -222,10 +257,15 @@ const setCharacter = (
               }
             });
 
-            await renderer.compileAsync(character, camera, scene);
+            try {
+              renderer.compile(character, camera);
+            } catch {
+              // fallback if synchronous compilation is not required
+            }
 
             resolve(gltf);
             setCharTimeline(character, camera);
+            setPoseTimeline(character);
             setAllTimeline();
 
             dracoLoader.dispose();
