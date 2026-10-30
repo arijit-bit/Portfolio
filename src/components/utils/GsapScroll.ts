@@ -100,7 +100,12 @@ export function setCharTimeline(
         .to(".landing-container", { y: "40%", duration: 0.8 }, 0)
         .fromTo(".about-me", { y: "-50%" }, { y: "0%" }, 0);
 
-      const m = MIRROR_POSE ? -1 : 1;
+      // In About Me, character.rotation.y is 0.7 rad (~40.1 deg).
+      // When MIRROR_POSE is active, rotate the character around 60 deg to the right:
+      // 0.7 rad - 60 deg (1.047 rad) = -0.347 rad (~ -20 deg).
+      const whatIDoYaw = MIRROR_POSE
+        ? 0.7 - THREE.MathUtils.degToRad(60)
+        : -0.25;
       tl2
         .to(
           camera.position,
@@ -115,7 +120,7 @@ export function setCharTimeline(
           { pointerEvents: "none", x: "-12%", delay: 1.5, duration: 5, ease: "power1.inOut", immediateRender: false },
           0
         )
-        .to(character.rotation, { y: -0.25 * m, x: 0.08, delay: 2, duration: 4, ease: "power1.inOut" }, 0);
+        .to(character.rotation, { y: whatIDoYaw, x: 0.08, delay: 2, duration: 4, ease: "power1.inOut" }, 0);
 
       if (neckBone) {
         tl2.to(neckBone.rotation, { x: 0.6, delay: 2, duration: 3 }, 0);
