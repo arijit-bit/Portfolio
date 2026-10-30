@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { MIRROR_POSE } from "../Character/utils/riggedPose";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -99,6 +100,7 @@ export function setCharTimeline(
         .to(".landing-container", { y: "40%", duration: 0.8 }, 0)
         .fromTo(".about-me", { y: "-50%" }, { y: "0%" }, 0);
 
+      const m = MIRROR_POSE ? -1 : 1;
       tl2
         .to(
           camera.position,
@@ -113,7 +115,7 @@ export function setCharTimeline(
           { pointerEvents: "none", x: "-12%", delay: 1.5, duration: 5, ease: "power1.inOut", immediateRender: false },
           0
         )
-        .to(character.rotation, { y: -0.25, x: 0.08, delay: 2, duration: 4, ease: "power1.inOut" }, 0);
+        .to(character.rotation, { y: -0.25 * m, x: 0.08, delay: 2, duration: 4, ease: "power1.inOut" }, 0);
 
       if (neckBone) {
         tl2.to(neckBone.rotation, { x: 0.6, delay: 2, duration: 3 }, 0);

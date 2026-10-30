@@ -1,5 +1,31 @@
 import * as THREE from "three";
 
+export const MIRROR_POSE = true; // true = right arm extended / left arm back. false = original (left arm extended)
+
+const swapSide = (k: string) =>
+  k.startsWith("Left") ? "Right" + k.slice(4) :
+  k.startsWith("Right") ? "Left" + k.slice(5) : k;
+
+// Mirror across the character's left-right plane:
+//  - Left* <-> Right* bones swap their values
+//  - pitch (x) is unchanged; yaw (y), roll (z) and long-axis twist flip sign
+//  - bone-local entries (finger curls) keep their values, since Mixamo's left/right local frames are already mirrored
+export const mirrorPose = (pose: PoseValues): PoseValues => {
+  const out: PoseValues = {};
+  for (const key in pose) {
+    const t = pose[key];
+    out[swapSide(key)] = t.local
+      ? { ...t }
+      : {
+          ...t,
+          y: t.y !== undefined ? -t.y : undefined,
+          z: t.z !== undefined ? -t.z : undefined,
+          twist: t.twist !== undefined ? -t.twist : undefined,
+        };
+  }
+  return out;
+};
+
 export type PoseEntry = {
   x?: number;
   y?: number;
@@ -72,7 +98,7 @@ const smoothstep = (t: number) => t * t * (3 - 2 * t);
 
 export const createRiggedPose = (
   character: THREE.Object3D,
-  target: PoseValues = ACTION_POSE
+  target: PoseValues = MIRROR_POSE ? mirrorPose(ACTION_POSE) : ACTION_POSE
 ) => {
   character.updateWorldMatrix(true, true);
   const charInv = character.getWorldQuaternion(new THREE.Quaternion()).invert();
@@ -112,10 +138,11 @@ export const createRiggedPose = (
 
   // Repulsor palm light and chest reactor light
   const palmLight = new THREE.PointLight(0x8ae0ff, 0, 8);
-  const leftHandBone = bones["LeftHand"]?.bone;
-  if (leftHandBone) {
+  const extHand = MIRROR_POSE ? "RightHand" : "LeftHand";
+  const extHandBone = bones[extHand]?.bone;
+  if (extHandBone) {
     palmLight.position.set(0, 0.5, 0.2);
-    leftHandBone.add(palmLight);
+    extHandBone.add(palmLight);
   }
 
   const chestLight = new THREE.PointLight(0xa0e4ff, 0, 10);
