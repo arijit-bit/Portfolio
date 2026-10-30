@@ -102,7 +102,7 @@ export function setCharTimeline(
       tl2
         .to(
           camera.position,
-          { z: 46, y: 8.5, duration: 6, delay: 1.5, ease: "power1.inOut" },
+          { z: 52, y: 9.35, duration: 6, delay: 1.5, ease: "power1.inOut" },
           0
         )
         .to(".about-me", { y: "25%", duration: 5, delay: 1.5, ease: "power1.inOut" }, 0)

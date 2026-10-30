@@ -4,6 +4,7 @@ export type PoseEntry = {
   x?: number;
   y?: number;
   z?: number;
+  twist?: number; // degrees about the bone's long axis
   range?: [number, number]; // portion of the scroll progress (0..1) in which this bone moves
   local?: boolean;          // true = rotate in the bone's own local axes (fingers), false = character space
 };
@@ -19,8 +20,8 @@ export const ACTION_POSE: PoseValues = {
   // Extended repulsor arm (character's LEFT, screen-right toward cards)
   LeftShoulder: { z: 12, range: [0.1, 0.9] },
   LeftArm:      { x: -84, y: -10, z: 24, range: [0.1, 0.9] },
-  LeftForeArm:  { x: -4, y: -6, range: [0.1, 0.9] },
-  LeftHand:     { x: -55, y: 15, z: 12, range: [0.25, 0.95] },
+  LeftForeArm:  { x: -12, twist: 70, range: [0.1, 0.9] },
+  LeftHand:     { x: -15, twist: 20, range: [0.3, 1] },
 
   // Left hand: open palm with fingers spread and slightly bent back
   LeftHandIndex1:  { x: -20, z: 10, local: true, range: [0.3, 0.95] },
@@ -78,7 +79,12 @@ export const createRiggedPose = (
 
   const bones: Record<
     string,
-    { bone: THREE.Bone; restLocal: THREE.Quaternion; restWorld: THREE.Quaternion }
+    {
+      bone: THREE.Bone;
+      restLocal: THREE.Quaternion;
+      restWorld: THREE.Quaternion;
+      axis: THREE.Vector3;
+    }
   > = {};
   character.traverse((o: any) => {
     if (!o.isBone) return;
@@ -86,6 +92,10 @@ export const createRiggedPose = (
       bone: o,
       restLocal: o.quaternion.clone(),
       restWorld: charInv.clone().multiply(o.getWorldQuaternion(new THREE.Quaternion())),
+      axis: (() => {
+        const c = o.children.find((ch: any) => ch.isBone);
+        return c ? c.position.clone().normalize() : new THREE.Vector3(0, 1, 0);
+      })(),
     };
   });
 
@@ -120,7 +130,8 @@ export const createRiggedPose = (
   const e = new THREE.Euler(),
     D = new THREE.Quaternion(),
     inv = new THREE.Quaternion(),
-    conj = new THREE.Quaternion();
+    conj = new THREE.Quaternion(),
+    tw = new THREE.Quaternion();
   const rad = THREE.MathUtils.degToRad;
 
   const apply = () => {
@@ -157,6 +168,9 @@ export const createRiggedPose = (
         inv.copy(b.restWorld).invert();
         conj.copy(inv).multiply(D).multiply(b.restWorld);
         b.bone.quaternion.copy(b.restLocal).multiply(conj);
+      }
+      if (t.twist) {
+        b.bone.quaternion.multiply(tw.setFromAxisAngle(b.axis, rad(t.twist * p)));
       }
     }
 

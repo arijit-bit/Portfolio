@@ -56,6 +56,24 @@ const setCharacter = (
               }
             });
 
+            // Fix face mask upper lip notch/dent on Gold_Part:
+            // Mixamo/sculpt artifact where vertices 30606 and 30607 at the center of the upper lip
+            // were pulled down into the mouth slit by ~0.013 units instead of following the smooth parabolic arch.
+            // Symmetrizing them to match vertices 30610 and 30609 restores the clean, straight horizontal lip line.
+            character.traverse((child: any) => {
+              if (child.isMesh && child.material?.name === "Gold_Part") {
+                const pos = child.geometry?.attributes?.position;
+                if (pos && pos.count > 30610) {
+                  pos.setY(30606, pos.getY(30610));
+                  pos.setZ(30606, pos.getZ(30610));
+                  pos.setY(30607, pos.getY(30609));
+                  pos.setZ(30607, pos.getZ(30609));
+                  pos.needsUpdate = true;
+                  child.geometry.computeVertexNormals();
+                }
+              }
+            });
+
             // Call updateMatrixWorld before creating the pose helper
             character.updateMatrixWorld(true);
             character.userData.pose = createRiggedPose(character);
