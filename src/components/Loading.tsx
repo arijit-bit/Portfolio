@@ -55,7 +55,6 @@ const Loading = ({ percent }: { percent: number }) => {
     import("./utils/initialFX")
       .then((module) => {
         if (isCancelled) return;
-
         try {
           if (module.initialFX) {
             module.initialFX();
