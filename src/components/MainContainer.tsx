@@ -1,4 +1,4 @@
-import {
+﻿import {
   lazy,
   PropsWithChildren,
   Suspense,
@@ -13,6 +13,7 @@ import Cursor from "./Cursor";
 import Landing from "./Landing";
 import Navbar from "./Navbar";
 import SocialIcons from "./SocialIcons";
+import JarvisHUD from "./JarvisHUD";
 import WhatIDo from "./WhatIDo";
 import Work from "./Work";
 import setSplitText from "./utils/splitText";
@@ -44,6 +45,7 @@ const MainContainer = ({ children }: PropsWithChildren) => {
       <Cursor />
       <Navbar />
       <SocialIcons />
+      <JarvisHUD mode="floating" />
       {isDesktopView && children}
       <div className="container-main">
         <Landing>{!isDesktopView && children}</Landing>
@@ -61,3 +63,4 @@ const MainContainer = ({ children }: PropsWithChildren) => {
 };
 
 export default MainContainer;
+
