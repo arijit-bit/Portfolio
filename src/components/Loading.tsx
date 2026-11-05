@@ -7,7 +7,6 @@ import Marquee from "react-fast-marquee";
 const Loading = ({ percent }: { percent: number }) => {
   const { setIsLoading } = useLoading();
   const [loaded, setLoaded] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [clicked, setClicked] = useState(false);
   const exitStartedRef = useRef(false);
 
@@ -23,39 +22,17 @@ const Loading = ({ percent }: { percent: number }) => {
     };
   }, [loaded, percent]);
 
-  useEffect(() => {
-    if (!loaded || isLoaded) return;
-
-    const isLoadedTimeout = setTimeout(() => {
-      setIsLoaded(true);
-    }, 250);
-
-    return () => {
-      clearTimeout(isLoadedTimeout);
-    };
-  }, [isLoaded, loaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (exitStartedRef.current) return;
-
+  const handleEnter = () => {
+    if (!loaded || exitStartedRef.current) return;
     exitStartedRef.current = true;
-    let isCancelled = false;
-    const clickTimeout = setTimeout(() => {
-      if (!isCancelled) {
-        setClicked(true);
-      }
-    }, 50);
-    const exitTimeout = setTimeout(() => {
-      if (!isCancelled) {
-        setIsLoading(false);
-      }
+    setClicked(true);
+
+    setTimeout(() => {
+      setIsLoading(false);
     }, 450);
 
     import("./utils/initialFX")
       .then((module) => {
-        if (isCancelled) return;
-
         try {
           if (module.initialFX) {
             module.initialFX();
@@ -67,13 +44,20 @@ const Loading = ({ percent }: { percent: number }) => {
       .catch((error) => {
         console.error("Loading screen exit failed", error);
       });
+  };
 
-    return () => {
-      isCancelled = true;
-      clearTimeout(clickTimeout);
-      clearTimeout(exitTimeout);
+  useEffect(() => {
+    if (!loaded) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        handleEnter();
+      }
     };
-  }, [isLoaded, setIsLoading]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [loaded]);
 
   function handleMouseMove(e: React.MouseEvent<HTMLElement>) {
     const { currentTarget: target } = e;
@@ -101,19 +85,59 @@ const Loading = ({ percent }: { percent: number }) => {
           </div>
         </div>
       </div>
-      <div className="loading-screen">
+      <div
+        className={`loading-screen ${loaded ? "loading-screen-ready" : ""}`}
+        onClick={loaded ? handleEnter : undefined}
+      >
         <div className="loading-marquee">
           <Marquee>
             <span> A Creative Developer</span> <span>A Creative Designer</span>
             <span> A Creative Developer</span> <span>A Creative Designer</span>
           </Marquee>
         </div>
+
         <div
-          className={`loading-wrap ${clicked && "loading-clicked"}`}
+          className={`loading-hint-wrap ${loaded ? "loading-hint-visible" : ""} ${clicked ? "loading-hint-hidden" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEnter();
+          }}
+        >
+          <button
+            className="loading-click-btn"
+            type="button"
+            data-cursor="disable"
+          >
+            <span>Click to enter</span>
+          </button>
+          <div className="loading-arrow-down" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="4" x2="12" y2="18"></line>
+              <polyline points="18 12 12 18 6 12"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <div
+          className={`loading-wrap ${clicked ? "loading-clicked" : ""} ${loaded ? "loading-ready" : ""}`}
           onMouseMove={(e) => handleMouseMove(e)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEnter();
+          }}
+          data-cursor={loaded ? "disable" : undefined}
         >
           <div className="loading-hover"></div>
-          <div className={`loading-button ${loaded && "loading-complete"}`}>
+          <div className={`loading-button ${loaded ? "loading-complete" : ""}`}>
             <div className="loading-container">
               <div className="loading-content">
                 <div className="loading-content-in">
@@ -123,7 +147,7 @@ const Loading = ({ percent }: { percent: number }) => {
               <div className="loading-box"></div>
             </div>
             <div className="loading-content2">
-              <span>Welcome</span>
+              <span>ENTER</span>
             </div>
           </div>
         </div>

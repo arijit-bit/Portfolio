@@ -17,7 +17,17 @@ const Scene = () => {
   const hoverDivRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const characterRef = useRef<THREE.Object3D | null>(null);
-  const { setLoading } = useLoading();
+  const { setLoading, isLoading } = useLoading();
+  const isLoadingRef = useRef(isLoading);
+  const hasStartedCinematicRef = useRef(false);
+  const startBootSequenceRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+    if (!isLoading) {
+      startBootSequenceRef.current();
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     if (!canvasDiv.current) return;
@@ -57,15 +67,28 @@ const Scene = () => {
     const progress = setProgress((value) => setLoading(value));
     const { loadCharacter } = setCharacter(renderer, scene, camera);
 
+    let animations: ReturnType<typeof setAnimations> | undefined;
+
     const onResize = () => {
       if (!characterRef.current) return;
       handleResize(renderer, camera, canvasDiv, characterRef.current);
     };
 
+    startBootSequenceRef.current = () => {
+      if (hasStartedCinematicRef.current || !characterRef.current || isDisposed) return;
+      hasStartedCinematicRef.current = true;
+
+      light.playCinematicBootSequence(characterRef.current, () => {
+        if (animations) {
+          animations.startIntro();
+        }
+      });
+    };
+
     loadCharacter().then((gltf) => {
       if (!gltf || isDisposed) return;
 
-      const animations = setAnimations(gltf);
+      animations = setAnimations(gltf);
       if (hoverDivRef.current) {
         animations.hover(gltf, hoverDivRef.current);
       }
@@ -77,16 +100,18 @@ const Scene = () => {
       screenLight = nextCharacter.getObjectByName("screenlight") || null;
 
       progress.loaded().then(() => {
-        setTimeout(() => {
-          light.turnOnLights();
-          animations.startIntro();
-        }, 400);
+        if (!isLoadingRef.current) {
+          startBootSequenceRef.current();
+        }
       });
 
       window.addEventListener("resize", onResize);
     }).catch((err) => {
       console.error("Failed to load character:", err);
       progress.loaded();
+      import("../utils/initialFX")
+        .then((mod) => mod.initialFX())
+        .catch(console.error);
     });
 
     let mouse = { x: 0, y: 0 };
@@ -199,6 +224,7 @@ const Scene = () => {
       window.removeEventListener("resize", onResize);
 
       characterRef.current = null;
+      light.stopSuitStartupSound();
       scene.clear();
       renderer.dispose();
       sceneRef.current = null;

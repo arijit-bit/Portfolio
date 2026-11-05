@@ -48,25 +48,16 @@ a:hover {
 
 main {
   opacity: 1;
-  transition: 0.3s;
 }
 
 .main-active {
-  opacity: 0;
-  animation: fadeIn 1s 1;
-  animation-fill-mode: forwards;
-}
-
-@keyframes fadeIn {
-  100% {
-    opacity: 1;
-  }
+  opacity: 1;
 }
 
 body {
   margin: 0;
   height: auto;
-  background-color: #000;
+  background-color: var(--backgroundColor);
   flex-grow: 1;
   --cWidth: calc(100% - 30px);
   --cMaxWidth: 1920px;

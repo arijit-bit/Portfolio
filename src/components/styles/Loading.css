@@ -57,6 +57,97 @@
   justify-content: center;
   align-items: center;
 }
+.loading-ready {
+  cursor: pointer;
+  animation: pulse-button 2s infinite ease-in-out;
+}
+.loading-ready .loading-button {
+  cursor: pointer;
+}
+.loading-ready:hover {
+  transform: scale(1.06);
+  box-shadow: 0px 20px 30px 0px rgba(168, 124, 255, 0.45);
+}
+.loading-wrap.loading-clicked {
+  animation: none !important;
+}
+@keyframes pulse-button {
+  0%, 100% {
+    box-shadow: 0px 15px 25px 0px rgba(168, 124, 255, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0px 18px 32px 0px rgba(168, 124, 255, 0.55);
+    transform: scale(1.03);
+  }
+}
+.loading-screen-ready {
+  cursor: pointer;
+}
+.loading-hint-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: calc(50% + 50px);
+  transform: translateX(-50%) translateY(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+.loading-hint-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.loading-hint-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-15px);
+}
+.loading-click-btn {
+  background-color: #000;
+  color: #fff;
+  border: 1px solid rgba(168, 124, 255, 0.45);
+  padding: 8px 22px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 12px rgba(168, 124, 255, 0.25);
+}
+.loading-click-btn:hover {
+  background-color: #121016;
+  border-color: #a87cff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 20px rgba(168, 124, 255, 0.55);
+}
+.loading-arrow-down {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b5cf6;
+  animation: bounce-arrow 1.6s infinite ease-in-out;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 6px rgba(139, 92, 246, 0.4));
+}
+@keyframes bounce-arrow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
 .loading-clicked {
   transition-delay: 0ms;
   transition-timing-function: cubic-bezier(0.33, 0.11, 1, 0.72);
