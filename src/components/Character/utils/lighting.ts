@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RGBELoader } from "three-stdlib";
 import { gsap } from "gsap";
+import { jarvisState } from "../../../utils/jarvisState";
 
 const setLighting = (scene: THREE.Scene) => {
   const directionalLight = new THREE.DirectionalLight(0xc7a9ff, 0);
@@ -39,6 +40,20 @@ const setLighting = (scene: THREE.Scene) => {
 
   const envState = { intensity: 0.02 };
   let bootAudio: HTMLAudioElement | null = null;
+  const sfxEyes = typeof Audio !== "undefined" ? new Audio("/audio/sfx-eyes.wav") : null;
+  const sfxChest = typeof Audio !== "undefined" ? new Audio("/audio/sfx-chest.wav") : null;
+  const sfxShoulders = typeof Audio !== "undefined" ? new Audio("/audio/sfx-shoulders.wav") : null;
+
+  function playSfx(audio: HTMLAudioElement | null, volume = 0.6) {
+    if (!audio) return;
+    try {
+      audio.currentTime = 0;
+      audio.volume = volume;
+      audio.play().catch(() => {});
+    } catch {
+      // ignore
+    }
+  }
 
   function playSuitStartupSound() {
     try {
@@ -46,7 +61,8 @@ const setLighting = (scene: THREE.Scene) => {
         bootAudio.pause();
         bootAudio.currentTime = 0;
       }
-      bootAudio = new Audio("/audio/jarvis-greetings.mp3");
+      bootAudio = new Audio("/audio/welcome.mp3");
+      jarvisState.setAudio(bootAudio);
       bootAudio.volume = 0.9;
       const playPromise = bootAudio.play();
       if (playPromise !== undefined) {
@@ -71,6 +87,18 @@ const setLighting = (scene: THREE.Scene) => {
       bootAudio.pause();
       bootAudio.currentTime = 0;
       bootAudio = null;
+    }
+    if (sfxEyes) {
+      sfxEyes.pause();
+      sfxEyes.currentTime = 0;
+    }
+    if (sfxChest) {
+      sfxChest.pause();
+      sfxChest.currentTime = 0;
+    }
+    if (sfxShoulders) {
+      sfxShoulders.pause();
+      sfxShoulders.currentTime = 0;
     }
   }
   new RGBELoader()
@@ -105,7 +133,12 @@ const setLighting = (scene: THREE.Scene) => {
     const arcMat = armorLights?.arcMaterial;
 
     const tl = gsap.timeline();
-    tl.timeScale(1.25);
+    tl.timeScale(0.55);
+
+    // Launch welcome sound immediately upon entering
+    tl.add(() => {
+      playSuitStartupSound();
+    }, 0);
 
     // Ensure all lights start completely powered down
     if (uniforms) {
@@ -128,9 +161,9 @@ const setLighting = (scene: THREE.Scene) => {
     // Phase 0: Dramatic suspense in the dark (0.35s)
     tl.to({}, { duration: 0.35 });
 
-    // Phase 1: Two eye lights ignite & pulse with clean voice playback
+    // Phase 1: Two eye lights ignite & pulse with clean light chime
     tl.add(() => {
-      playSuitStartupSound();
+      playSfx(sfxEyes, 0.55);
     });
     if (uniforms) {
       tl.to(uniforms.uEyeIntensity, {
@@ -167,6 +200,9 @@ const setLighting = (scene: THREE.Scene) => {
     tl.to({}, { duration: 0.25 });
 
     // Phase 2: Chest light (Arc Reactor) surges with cyan brilliance
+    tl.add(() => {
+      playSfx(sfxChest, 0.70);
+    });
     if (uniforms) {
       tl.to(uniforms.uChestIntensity, {
         value: 5.0,
@@ -222,6 +258,9 @@ const setLighting = (scene: THREE.Scene) => {
     tl.to({}, { duration: 0.2 });
 
     // Phase 3: Shoulder lights ignite and lock in
+    tl.add(() => {
+      playSfx(sfxShoulders, 0.55);
+    });
     if (uniforms) {
       tl.to(uniforms.uShoulderIntensity, {
         value: 4.0,
