@@ -38,6 +38,41 @@ const setLighting = (scene: THREE.Scene) => {
   scene.add(rightShoulderLight);
 
   const envState = { intensity: 0.02 };
+  let bootAudio: HTMLAudioElement | null = null;
+
+  function playSuitStartupSound() {
+    try {
+      if (bootAudio) {
+        bootAudio.pause();
+        bootAudio.currentTime = 0;
+      }
+      bootAudio = new Audio("/audio/jarvis-greetings.mp3");
+      bootAudio.volume = 0.9;
+      const playPromise = bootAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.log("Audio autoplay restricted by browser; unlocking on first interaction:", err);
+          const unlock = () => {
+            if (bootAudio && bootAudio.paused) {
+              bootAudio.play().catch(() => {});
+            }
+          };
+          window.addEventListener("pointerdown", unlock, { once: true });
+          window.addEventListener("keydown", unlock, { once: true });
+        });
+      }
+    } catch (e) {
+      console.warn("Unable to play suit boot sound:", e);
+    }
+  }
+
+  function stopSuitStartupSound() {
+    if (bootAudio) {
+      bootAudio.pause();
+      bootAudio.currentTime = 0;
+      bootAudio = null;
+    }
+  }
   new RGBELoader()
     .setPath("/models/")
     .load("char_enviorment.hdr", function (texture) {
@@ -70,6 +105,7 @@ const setLighting = (scene: THREE.Scene) => {
     const arcMat = armorLights?.arcMaterial;
 
     const tl = gsap.timeline();
+    tl.timeScale(1.25);
 
     // Ensure all lights start completely powered down
     if (uniforms) {
@@ -92,7 +128,10 @@ const setLighting = (scene: THREE.Scene) => {
     // Phase 0: Dramatic suspense in the dark (0.35s)
     tl.to({}, { duration: 0.35 });
 
-    // Phase 1: Two eye lights ignite & pulse with high-voltage startup
+    // Phase 1: Two eye lights ignite & pulse with clean voice playback
+    tl.add(() => {
+      playSuitStartupSound();
+    });
     if (uniforms) {
       tl.to(uniforms.uEyeIntensity, {
         value: 4.5,
@@ -287,7 +326,7 @@ const setLighting = (scene: THREE.Scene) => {
     playCinematicBootSequence(character);
   }
 
-  return { setPointLight, turnOnLights, playCinematicBootSequence };
+  return { setPointLight, turnOnLights, playCinematicBootSequence, stopSuitStartupSound };
 };
 
 export default setLighting;

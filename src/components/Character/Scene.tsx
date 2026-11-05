@@ -224,6 +224,7 @@ const Scene = () => {
       window.removeEventListener("resize", onResize);
 
       characterRef.current = null;
+      light.stopSuitStartupSound();
       scene.clear();
       renderer.dispose();
       sceneRef.current = null;
